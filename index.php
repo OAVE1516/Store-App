@@ -56,19 +56,19 @@ function populateList($id, $category, $subcategory, $name, $image, $price, $desc
     //Non priced items (multipliers) are logged as -1 in the database
     if ($price < 0){
         if ($category == "theme"){
-            //All themes are to provide a multiplier of 0.4 to the price
-            $price = toDollars($_SESSION["totalPrice"] * 0.4);
+            //All themes provide a 0.4 multiplier to the current price (size multiplier times occasion price , index 1 of sel_occ is the price)
+            $price = toDollars($_SESSION["size"] * $_SESSION["sel_occasion"][1] * 0.4);
         }
     }
     else{
         //If it's an addon, flat rate regardless of size, except for $subcategory = 0, food
-        if ($category == "add-on[]" && $subcategory != 0){
+        /*if ($category == "add-on[]" && $subcategory != 0){
             $price = toDollars($price);
-        }
+        }*/
         //Otherwise, we multiply price by the $size multiplier
-        else{
+        //else{
             $price = toDollars($price * $_SESSION["size"]);
-        }
+        //}
     }
     $buttonText = $name;
     $contactUs = " Please <a href='/contact' target='_blank'>contact us</a> if you would like to order this item.";
@@ -107,22 +107,20 @@ function putInGrid($id, $category, $subcategory, $name, $image, $price, $descrip
         $description = "Morbi blandit semper neque, eget tincidunt massa interdum a. Morbi quis risus dolor. Donec aliquet malesuada pharetra.";
     
     //Non priced items (multipliers) are logged as -1 in the database
-    if ($price < 0){
+   /* if ($price < 0){
         if ($category == "theme"){
             //All themes are to provide a multiplier of 0.4 to the price
             $price = toDollars($_SESSION["totalPrice"] * 0.4);
         }
     }
-    else{
+    else{*/
         //If it's an addon, flat rate regardless of size, except for $subcategory = 0, food
-        if ($category == "add-on[]" && $subcategory != 0){
-            $price = toDollars($price);
-        }
+        //if ($category == "add-on[]" && $subcategory != 0){
+            //$price = toDollars($price);
+        //}
         //Otherwise, we multiply price by the $size multiplier
-        else{
+        //else{
             $price = toDollars($price * $_SESSION["size"]);
-        }
-    }
     $buttonText = "Add $" . $price;
     $contactUs = " Please <a href='/contact' target='_blank'>contact us</a> if you would like to order this item.";
     if ($category != "add-on[]")
@@ -208,9 +206,10 @@ function writeAddons(){
 <html>
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" href="favicon.png">
-    <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="css/store.css">
+    <link rel="icon" href="../img/favicon.png">
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/store.css">
+    <link rel="stylesheet" href="../css/navfooter.css">
     <script src="store.js"></script>
     <title>BlockParty || Store</title>
 </head>
@@ -234,20 +233,13 @@ function writeAddons(){
             echo var_dump($_SESSION);
         ?>
     </div>
-    <div class="row center-text">
-        <div id="contact-response">
-            <?php
-                /*echo $_REQUEST["text"];
-                if ($_REQUEST["text"] != "Success! Invoice has been sent." && isset($_REQUEST["text"])){
-                    echo "<script>document.addEventListener('DOMContentLoaded', function() {
-                        setDisplay(4);
-                    });</script>";
-                }*/
-            ?>
-        </div>
-    </div>
     <!--Size-->
     <div class="row" id="size">
+        
+    <div class="row center-text">
+        <div id="contact-response">
+        </div>
+    </div>
         <h1>Pick a size</h1>
         <div class="col-6">
             <p>Here at BlockParty, we make every effort to accomodate your function's needs. You can customize the contents to match your event idea. First, we will need to know how many people you are expecting.</p>
@@ -255,17 +247,21 @@ function writeAddons(){
         </div>
         <div class="col-6">
             <form method="post">
-                <label><input type="radio" name="size" value="small" checked><span>Small: 50-75</span></label>
-                <label><input type="radio" name="size" value="medium"><span>Medium: 75-125</span></label>
+                <label><input type="radio" name="size" value="xsmall"><span>Extra Small: Under 50</span></label>
+                <label><input type="radio" name="size" value="small"><span>Small: 50-75</span></label>
+                <label><input type="radio" name="size" value="medium" checked><span>Medium: 75-125</span></label>
                 <label><input type="radio" name="size" value="large"><span>Large: 125-175</span></label>
                 <label><input type="radio" name="size" value="xlarge"><span>Extra Large: 175-250</span></label>
                 <input type="submit" value="Next" style="clear: both;">
             </form>
-                <p>For parties larger than 250 people, please <a href="/contact/">contact us.</a></p>
+                <p>For parties larger than 250 people, please contact us at contact@veblockparty.com</a></p>
             <?php
                 //When the user submits the size, the form posts
                 if (isset($_POST["size"]) && $_SESSION["STEP"] != 4){
                     switch ($_POST["size"]){
+                        case "xsmall":
+                        $_SESSION["sel_size"] = "Extra Small";
+                        $_SESSION["size"] = 0.6; break;
                         case "small":
                         $_SESSION["sel_size"] = "Small";
                         $_SESSION["size"] = 1; break;
@@ -349,7 +345,7 @@ function writeAddons(){
         <div class="col-6">
             <div class="description">
                 <img src="/img/products/Themes.png">
-                <h3>Add $30.00</h3>
+                <h3>Add $0.00</h3>
                 <p>Sometimes you don't need a theme to have a great time. Without a theme, you're free to truly make the party your own. Think of this as a blank canvas for your creativity. Regardless of what you want to do, we'll be there to help with the process.
 </p>
             </div>
@@ -362,12 +358,12 @@ function writeAddons(){
                 if (isset($_POST["theme"])){
                     $post_val = $_POST["theme"];
                     if ($post_val != "No Theme"){
-                        $post_price = toDollars($_SESSION["totalPrice"] * 0.4);
+                        $post_price = toDollars($_SESSION["size"] * $_SESSION["sel_occasion"][1] * 0.4);
                     }
                     else
                         $post_price = 0;
                     $post_price = toDollars($post_price);
-                    $_SESSION["totalPrice"] += $post_price;
+                    //$_SESSION["totalPrice"] += $post_price;
                     $_SESSION["sel_theme"] = array($post_val, $post_price);
                     $_SESSION["STEP"]++;
                     echo "<script>document.addEventListener('DOMContentLoaded', function() {
@@ -403,7 +399,7 @@ function writeAddons(){
                             //foreach item, select the price
                             $temp_price = (double)$conn->query("SELECT price FROM products WHERE category = 4 AND name = '" . $item . "'")->fetch_assoc()["price"];
                             //if a size multiplier is to be applied, apply it
-                            if ($conn->query("SELECT subcategory FROM products WHERE name = '" . $item . "'") == 0)
+                            //if ($conn->query("SELECT subcategory FROM products WHERE name = '" . $item . "'") == 0)
                                 $temp_price *= $_SESSION["size"];
                             //otherwise, use price as is and add this item's price to $post_price
                             $post_price += $temp_price;
@@ -411,7 +407,7 @@ function writeAddons(){
                     }
                     $post_price = toDollars($post_price);
                     //when done iterating, add this money value to total
-                    $_SESSION["totalPrice"] += $post_price;
+                    //$_SESSION["totalPrice"] += $post_price;
                     //This would contain an array of items and then the TOTAL cost
                     $_SESSION["sel_addons"] = array($post_val, $post_price);
                     $_SESSION["STEP"]++;
@@ -426,7 +422,6 @@ function writeAddons(){
         </form>
         </div>
     </div>
-
     <!-- Payment-->
     <div class="row" id="payment">
         <h1>Checkout</h1>
@@ -435,25 +430,26 @@ function writeAddons(){
             <h3>Order Summary</h3>
             <p>
             <?php
-                $finalPrices = array(
-                    "subtotal"=>toDollars($_SESSION["totalPrice"]),
-                    "tax"=>toDollars($_SESSION["totalPrice"] * $TAX_CONSTANT),
-                    "shipping"=>toDollars($BASE_SHIPPING * $_SESSION["size"]),
-                    "grandTotal"=>toDollars($_SESSION["totalPrice"] * (1 + $TAX_CONSTANT) + ($BASE_SHIPPING * $_SESSION["size"]))
-                );
-                $_SESSION["finalPrices"] = $finalPrices;
+                $ITEM = 0;
+                $COST = 1;
                 $sel_size = $_SESSION["sel_size"];
                 $sel_occasion = $_SESSION["sel_occasion"];
                 $sel_theme = $_SESSION["sel_theme"];
                 $sel_addons = $_SESSION["sel_addons"];
-                $total_price = $_SESSION["totalPrice"];
+                $total_price = $sel_occasion[$COST] + $sel_theme[$COST] + $sel_addons[$COST];
                 $prices = $_SESSION["finalPrices"];
-                $ITEM = 0;
-                $COST = 1;
                 $addons = "";
                 foreach ($_SESSION['sel_addons'][0] as $addon){
                     $addons .= $addon . ", ";
                 }
+                $finalPrices = array(
+                    "subtotal"=>toDollars($total_price),
+                    "tax"=>toDollars($total_price * $TAX_CONSTANT),
+                    "shipping"=>toDollars($BASE_SHIPPING * $_SESSION["size"]),
+                    "grandTotal"=>toDollars($total_price * (1 + $TAX_CONSTANT) + ($BASE_SHIPPING * $_SESSION["size"]))
+                );
+                $_SESSION["finalPrices"] = $finalPrices;
+                
                 echo "Selected Size: $sel_size<br>
                 Selected Occasion: $sel_occasion[$ITEM], $$sel_occasion[$COST]<br>
                 Selected Theme: $sel_theme[$ITEM], $$sel_theme[$COST]<br>
@@ -472,9 +468,11 @@ function writeAddons(){
         </div>
         <div class="col-6 contact-form">
             <form action="save_invoice.php" method="POST">
-                <h3>Your Name</h3><input type="text" name="name" id="name">
-                <h3>Your E-mail</h3><input type="text" name="email" id="email">
-                <h3>Your School</h3><input type="text" name="school" id="school">
+                <form action="save_invoice.php" method="POST">
+                <h3>Name*</h3><input type="text" name="name" id="name" required>
+                <h3>E-mail*</h3><input type="text" name="email" id="email" required>
+                <h3>Phone Number</h3><input type="text" name="phone" id="phone">
+                <h3>School</h3><input type="text" name="school" id="school">
                 <h3>Shipping Address</h3><input type="text" name="address" id="address">
                 <h3>City</h3><input type="text" name="city" id="city">
                 <div style="width: 25%; float: left; padding: 0px 15px 0px 0px;">
@@ -486,13 +484,16 @@ function writeAddons(){
                 <div style="width: 75%; float: left; padding: 0px;">
                     <h3>Zip Code</h3><input type="text" name="zip" id="zip">
                 </div>
+                <h3>Party Date</h3><input type="text" name="date" id="date">
+                <h3>Comments or special instructions</h3>
+                <textarea name="comments"></textarea>
+                <h3>Order Taken By</h3><input type="text" name="person" id="person">
+                <p>Customers may make their payment by transferring funds through their Virtual Enterprises portal. Add our company, "Block Party" as a payee, or enter our account number #630244170. This information will be emailed to customers when the order is processed within our system.</p>
         <div id="back" onclick="setDisplay(3)">Back</div>
                 <input type="submit" name="submit" value="Submit" id="next">
             </form>
         </div>
     </div>
-</div>
-</div>
 </body>
 </html>
 
